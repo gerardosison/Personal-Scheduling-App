@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
-import '../../home/presentation/home_screen.dart';
-import '../../home/create_schedule/presentation/create_schedule_screen.dart';
+import '../../feature/home/presentation/home_screen.dart';
+import '../../feature/create_schedule/presentation/create_schedule_screen.dart';
+import '../../feature/edit_schedule/presentation/edit_schedule_screen.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -11,6 +12,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/create',
       builder: (context, state) => const CreateScheduleScreen(),
+    ),
+    GoRoute(
+      path: '/edit/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return EditScheduleScreen(taskId: id);
+      },
     ),
   ],
 );
