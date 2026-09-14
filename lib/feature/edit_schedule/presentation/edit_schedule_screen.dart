@@ -24,6 +24,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   String _priority = 'normal';
   bool _loaded = false;
   Task? _originalTask;
+  String _repeatType = 'none';
 
   Future<void> _loadTask() async {
     final db = ref.read(databaseProvider);
@@ -37,6 +38,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       _selectedDate = task.scheduledAt;
       _selectedTime = TimeOfDay.fromDateTime(task.scheduledAt);
       _priority = task.priority;
+      _repeatType = task.repeatType;
       _loaded = true;
     });
   }
@@ -94,7 +96,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         message: drift.Value(_messageController.text.trim()),
         scheduledAt: drift.Value(scheduledAt),
         priority: drift.Value(_priority),
-        repeatType: drift.Value(_originalTask!.repeatType),
+        repeatType: drift.Value(_repeatType),
         status: drift.Value(_originalTask!.status),
         createdAt: drift.Value(_originalTask!.createdAt),
         updatedAt: drift.Value(DateTime.now()),
@@ -103,13 +105,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
     final notificationService = ref.read(notificationServiceProvider);
     await notificationService.cancelNotification(_originalTask!.id);
-    await notificationService.scheduleNotification(
+    await notificationService.scheduleRecurringNotification(
       id: _originalTask!.id,
       title: _titleController.text.trim(),
       body: _messageController.text.trim().isEmpty
           ? 'Reminder: ${_titleController.text.trim()}'
           : _messageController.text.trim(),
       scheduledDate: scheduledAt,
+      repeatType: _repeatType,
     );
 
     if (mounted) context.pop();
@@ -151,17 +154,18 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
               trailing: const Icon(Icons.access_time),
               onTap: _pickTime,
             ),
-            const SizedBox(height: 12),
+                        const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: _priority,
-              decoration: const InputDecoration(labelText: 'Priority'),
+              initialValue: _repeatType,
+              decoration: const InputDecoration(labelText: 'Repeat'),
               items: const [
-                DropdownMenuItem(value: 'low', child: Text('Low')),
-                DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                DropdownMenuItem(value: 'high', child: Text('High')),
+                DropdownMenuItem(value: 'none', child: Text('Does not repeat')),
+                DropdownMenuItem(value: 'daily', child: Text('Daily')),
+                DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
+                DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
               ],
               onChanged: (value) {
-                if (value != null) setState(() => _priority = value);
+                if (value != null) setState(() => _repeatType = value);
               },
             ),
             const SizedBox(height: 24),
